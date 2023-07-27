@@ -1,2 +1,2 @@
-# Final-year-project based on GSM and GPS modules.XD
+# Final-year-project based on GSM and GPS modules.
 
