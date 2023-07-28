@@ -96,21 +96,26 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
+This line calls the HAL_Init() function, which resets all peripherals, initializes the Flash memory interface, and sets up the Systick timer. It must be called before using any other HAL (Hardware Abstraction Layer) functions.
 
 
   /* Configure the system clock */
   SystemClock_Config();
-
+This line calls the SystemClock_Config() function, which configures the system clock of the microcontroller. It sets up the clock source, PLL, and other clock-related settings.
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  /* USER CODE BEGIN 2 */
+These lines call three functions (MX_GPIO_Init(), MX_USART1_UART_Init(), and MX_USART2_UART_Init()) to initialize the GPIO pins and USART1 and USART2 peripherals for UART communication.
+
   gsm_on();
-  /* USER CODE END 2 */
+
   HAL_UART_Transmit(&huart2,(uint8_t*)"GSM_INIT\r\n", sizeof("UART Polling Method\r\n"),300);
   HAL_UART_Transmit(&huart2,(uint8_t*)"FINAL YEAR PROJECT\r\n", sizeof("UART Polling Method\r\n"),300 );
+
+These two lines use the UART2 peripheral to transmit two messages: "GSM_INIT" and "FINAL YEAR PROJECT". The messages are sent to an external device connected to USART2 using UART communication.
+
   int a=1;
   char var[70];
   char data[]="................................\r\n";
@@ -119,11 +124,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  /* USER CODE END WHILE */
+
     HAL_UART_Transmit(&huart1, (uint8_t *)"AT\r\n", sizeof("AT\r\n"), 300);
     HAL_Delay(300);
     HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
     HAL_Delay(500);
+
+These lines send the "AT" command to the GSM module using UART1 (huart1) and wait for a response from the GSM module. The response is stored in the gsm_buffer. Then, it sends the contents of gsm_buffer to an external device using UART2 (huart2).
 
     HAL_UART_Transmit(&huart1, (uint8_t *)"AT+QIFGCNT=0\r\n", sizeof("AT+QIFGCNT=0\r\n"), 300);
     HAL_Delay(500);
@@ -180,6 +187,7 @@ int main(void)
   * @retval None
   */
 void SystemClock_Config(void)
+This is the function definition for SystemClock_Config. It configures the system clock of the microcontroller by setting up the oscillator, PLL, and clock dividers. This function is called from the main function to configure the system clock properly.
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -225,7 +233,9 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
+
 static void MX_USART1_UART_Init(void)
+This is the function definition for MX_USART1_UART_Init. It initializes the USART1 peripheral for UART communication. It sets various parameters such as baud rate, word length, stop bits, and more
 {
 
   /* USER CODE BEGIN USART1_Init 0 */
@@ -259,6 +269,7 @@ static void MX_USART1_UART_Init(void)
   * @retval None
   */
 static void MX_USART2_UART_Init(void)
+This is the function definition for MX_USART2_UART_Init. It initializes the USART2 peripheral for UART communication, similarly to MX_USART1_UART_Init.
 {
 
   /* USER CODE BEGIN USART2_Init 0 */
@@ -292,6 +303,7 @@ static void MX_USART2_UART_Init(void)
   * @retval None
   */
 static void MX_GPIO_Init(void)
+This is the function definition for MX_GPIO_Init. It initializes the GPIO pins, enabling the required ports for communication with the GSM module.
 {
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
@@ -314,6 +326,8 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 void Error_Handler(void)
+
+This is the function definition for Error_Handler. It is executed when there is an error in the code, and it enters an infinite loop, effectively halting the program and indicating an error state. The user can customize this function to handle errors according to their requirements.
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
