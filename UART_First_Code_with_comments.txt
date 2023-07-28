@@ -1,0 +1,342 @@
+
+Header files included in the code. "main.h" is likely a custom header file specific to the project, while <stdio.h> and <string.h> are standard 
+C library header files used for input/output and string manipulation functions, respectively.
+
+#include "main.h"
+#include<stdio.h>
+#include<string.h>
+ 
+#define gsm_bugger_size 500            It defines the size of the buffer (gsm_buffer) used for storing GSM responses. It appears to be 500 bytes.
+char buf[100]; 
+char gsm_buffer[gsm_bugger_size];      It is an array of characters used to store responses received from the GSM module.
+int gsm_index;                         An integer variable that likely keeps track of the current position or index in the gsm_buffer.
+int debug_index;
+
+UART_HandleTypeDef- This is likely a user-defined data type or a typedef representing a data structure or a handle for handling 
+UART (Universal Asynchronous Receiver/Transmitter) communication. 
+huart1- This is a variable of type UART_HandleTypeDef, which means it can hold information related to UART communication. Same goes for UART2.
+
+UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
+
+NOTE- In a microcontroller-based project, the UART_HandleTypeDef structure often contains various members that hold configuration settings and status information related to
+UART communication. For example, it might include parameters like the baud rate, data bits, stop bits, parity settings, and pointers to data buffers for transmit and 
+receive operations. The exact contents and usage of this structure would depend on the specific microcontroller and the UART library being used in the project.
+
+/*  Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);           A function prototype for configuring the system clock.
+static void MX_GPIO_Init(void);          A function prototype for initializing the GPIO (General Purpose Input/Output) pins.
+static void MX_USART1_UART_Init(void);   Initialization for USART1 (UART1) module.
+static void MX_USART2_UART_Init(void);   Initialization for USART2 (UART2) module.
+/* USER CODE BEGIN PFP */
+int gsm_wait_status;                     This is an integer variable used to indicate the status of waiting for a response from the GSM module.
+void gsm_on()                 This is a user-defined function responsible for powering on the GSM module. It uses GPIO pin PA5 to control the power state of the GSM module.
+{
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+    HAL_Delay(1000);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+    HAL_Delay(1000);
+}
+
+ADD- Why GPIO pin P5?
+
+void gsm_cmd(char *cmd, int gsm_delay)   
+What is it?  This is a user-defined function for sending commands to the GSM module and receiving responses.
+Parameters- cmd- This is a pointer to a character array that holds the command to be sent to the GSM module.
+gsm_delay- An integer parameter representing the delay time used in the function.
+What is the function about? -->The function sends the command via UART1 (HAL_UART_Transmit), waits for a short duration, and then checks for any response by 
+analyzing gsm_buffer. If a response is found, it sends the response via UART2.
+{
+        gsm_wait_status=0;    It seems like a flag variable that is used to indicate whether the GSM module is currently waiting for a response.
+        
+        memset(gsm_buffer,'\0',sizeof(gsm_buffer)); 
+        This line uses the memset function to fill the gsm_buffer array with null characters ('\0'). The memset function is used to initialize memory blocks with a 
+        particular value, and here it is clearing the contents of the gsm_buffer array to ensure that it's empty before receiving a response from the GSM module.
+        
+        HAL_UART_Transmit(&huart1,(uint8_t*) cmd, strlen(cmd),1000);
+        This line uses the HAL_UART_Transmit function to send the contents of the cmd array via UART communication on huart1.
+        &huart1- The address of the UART_HandleTypeDef structure (huart1) used to manage UART communication on the first UART port (USART1).
+        (uint8_t *)cmd- The pointer to the cmd character array containing the command to be sent to the GSM module. The (uint8_t *) typecast is used to convert 
+        the character pointer to a uint8_t pointer, as HAL_UART_Transmit expects a uint8_t* buffer.  (cmd ka memory location de rha hai in uint8_t format)
+        strlen(cmd)- The length of the command string to be transmitted, calculated using the strlen function.
+      1000-The timeout value (in milliseconds) for the transmission to complete. If the transmission takes longer than this timeout, the function will return with an error.
+        
+        HAL_Delay(300); 
+        This line introduces a delay of 300 milliseconds using the HAL_Delay function. The purpose of this delay is to allow some time for the GSM module to 
+        process the command and respond before checking for any response.
+        
+        if(gsm_index>0) 
+        if (gsm_index > 0)- This is a conditional statement checking if gsm_index is greater than 0. The gsm_index variable likely keeps track of how many 
+        characters or bytes have been received from the GSM module and stored in the gsm_buffer. gsm_index > 0, it means that some data has been received from the GSM
+        module and stored in the gsm_buffer. This implies that a response from the GSM module has been received.
+        {
+        HAL_Delay(10); HAL_Delay(10);: A small delay of 10 milliseconds is introduced before further processing. This might be for a brief pause to ensure the 
+        response is complete before proceeding.
+        gsm_index=0;   gsm_index = 0;: The gsm_index is reset to 0, indicating that the data in gsm_buffer has been processed, and the buffer is now ready for 
+        the next response.
+        gsm_wait_status=1;  gsm_wait_status = 1;: The gsm_wait_status flag is set to 1, indicating that the microcontroller is waiting for a response from the GSM module.
+        HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, strlen(gsm_buffer), 300);
+
+        }
+}
+
+char http[80]="https://api.thingspeak.com/update?api_key=ZEUKZ4D2EH58XP30&field1=";
+char url[80];
+
+In summary, the code initializes variables and buffers, sends an AT command to the GSM module via UART1, waits for a response, 
+and if a response is received, it processes and forwards it using UART2. The exact functionality and purpose of these operations may depend on the specific 
+application and the command sent to the GSM module.
+
+
+int main(void)
+{
+
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
+  /* USER CODE BEGIN 2 */
+  gsm_on();
+  /* USER CODE END 2 */
+  HAL_UART_Transmit(&huart2,(uint8_t*)"GSM_INIT\r\n", sizeof("UART Polling Method\r\n"),300);
+  HAL_UART_Transmit(&huart2,(uint8_t*)"FINAL YEAR PROJECT\r\n", sizeof("UART Polling Method\r\n"),300 );
+  int a=1;
+  char var[70];
+  char data[]="................................\r\n";
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+  /* USER CODE END WHILE */
+    HAL_UART_Transmit(&huart1, (uint8_t *)"AT\r\n", sizeof("AT\r\n"), 300);
+    HAL_Delay(300);
+    HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
+    HAL_Delay(500);
+
+    HAL_UART_Transmit(&huart1, (uint8_t *)"AT+QIFGCNT=0\r\n", sizeof("AT+QIFGCNT=0\r\n"), 300);
+    HAL_Delay(500);
+    HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
+    HAL_Delay(500);
+
+
+    HAL_UART_Transmit(&huart1, (uint8_t *)"AT+QICSGP=1,\"Airteliot.com\"\r\n", sizeof("AT+QICSGP=1,\"Airteliot.com\"\r\n"), 300);
+    HAL_Delay(500);
+    HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
+    HAL_Delay(500);
+
+    HAL_UART_Transmit(&huart1, (uint8_t *)"AT+QIREGAPP\r\n", sizeof("AT+QIREGAPP\r\n"), 300);
+    HAL_Delay(1000);
+    HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
+    HAL_Delay(1000);
+
+
+
+    HAL_UART_Transmit(&huart1, (uint8_t *)"AT+QIACT\r\n", sizeof("AT+QIACT\r\n"), 300);
+    HAL_Delay(3000);
+    HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
+    HAL_Delay(1000);
+
+    sprintf(url,"AT+QHTTPURL=%d,40\r\n",strlen(http));
+
+
+
+    HAL_Delay(2000);
+    HAL_UART_Transmit(&huart1, (uint8_t *)url, strlen(url), 300);
+    HAL_Delay(1000);
+
+    HAL_UART_Transmit(&huart1, (uint8_t *)http, strlen(http), 300);
+        HAL_Delay(1000);
+
+    HAL_UART_Transmit(&huart1, (uint8_t *)"AT+QHTTPGET=40\r\n", sizeof("AT+QHTTPGET=80\r\n"), 300);
+    HAL_Delay(6000);
+    HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
+
+    HAL_UART_Transmit(&huart1, (uint8_t *)"AT+QHTTPREAD=60\r\n", sizeof("AT+QHTTPREAD=60\r\n"), 300);
+    HAL_Delay(2000);
+    HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
+
+    HAL_Delay(10000);
+    HAL_UART_Transmit(&huart1, (uint8_t *)"AT+QIDEACT\r\n", sizeof("AT+QIDEACT\r\n"), 300);
+    HAL_Delay(1000);
+    HAL_UART_Transmit(&huart2, (uint8_t *)gsm_buffer, sizeof(gsm_buffer), 300);
+  }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 100;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+  USART1->CR1 = USART_CR1_TE | USART_CR1_RXNEIE | USART_CR1_RE | USART_CR1_UE;
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
