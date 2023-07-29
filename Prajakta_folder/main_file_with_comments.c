@@ -50,7 +50,13 @@ char rcvBuff[512];
 
 /* USER CODE END PM */
 
-/* Private variables ---------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------
+
+The UART_HandleTypeDef type is probably a user-defined structure or a predefined structure 
+from a library or framework used in the code. It likely contains members or fields that hold 
+the configuration and status information related to UART communication.
+
+*/
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -403,4 +409,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   
 }
 #endif /* USE_FULL_ASSERT */
-
